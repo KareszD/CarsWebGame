@@ -2,12 +2,48 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Simple Top-Down Racing Game</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Car Game</title>
+  <style>
+    body { 
+      margin: 0; 
+      overflow: hidden; 
+      background: #000; /* Optional: Set background to black */
+    }
+    #gameCanvas { 
+      display: block; 
+      background: #000; /* Optional: Set canvas background to black */
+    }
+    /* Optional: Style for mobile buttons */
+    .control-button {
+      width: 50px; 
+      height: 50px; 
+      font-size: 24px;
+      margin: 5px;
+    }
+    .controls-container {
+      position: absolute; 
+      bottom: 10px; 
+      left: 10px;
+    }
+    .controls-container.right {
+      left: auto; 
+      right: 10px;
+    }
+  </style>
 </head>
 <body>
   <canvas id="gameCanvas" width="800" height="600"></canvas>
-
+  
+  <!-- Mobile Control Buttons -->
+  <div class="controls-container left">
+    <button id="up-button" class="control-button">▲</button><br>
+    <button id="down-button" class="control-button">▼</button>
+  </div>
+  <div class="controls-container right">
+    <button id="left-button" class="control-button">◀</button>
+    <button id="right-button" class="control-button">▶</button>
+  </div>
+  
   <script src="script.js"></script>
 </body>
 </html>
