@@ -13,7 +13,7 @@
       display: block; 
       background: #000; /* Optional: Set canvas background to black */
     }
-    /* Optional: Style for mobile buttons */
+    /* Style for mobile buttons */
     .control-button {
       width: 50px; 
       height: 50px; 
@@ -29,6 +29,27 @@
       left: auto; 
       right: 10px;
     }
+    /* Style for file input */
+    #map-loader {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 1000; /* Ensure it's on top */
+    }
+    #map-file-input {
+      display: none; /* Hide the default file input */
+    }
+    #map-loader label {
+      cursor: pointer;
+      padding: 5px 10px;
+      background-color: #007BFF;
+      color: white;
+      border-radius: 3px;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -42,6 +63,12 @@
   <div class="controls-container right">
     <button id="left-button" class="control-button">◀</button>
     <button id="right-button" class="control-button">▶</button>
+  </div>
+  
+  <!-- Map Loader -->
+  <div id="map-loader">
+    <input type="file" id="map-file-input" accept=".json">
+    <label for="map-file-input">Load Map</label>
   </div>
   
   <script src="script.js"></script>
