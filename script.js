@@ -8,6 +8,7 @@ const ctx = canvas.getContext('2d');
 canvas.width = 1000;
 canvas.height = 800;
 
+
 // Tilemap setup
 const tileSize = 64; // Size of each tile in pixels
 
@@ -33,8 +34,7 @@ const mapHeight = predefinedMap.length;           // Number of rows (vertically)
 const mapWidth = predefinedMap[0].length; 
 // Start/Finish Line (all tiles marked as 3)
 const startFinishLine = [
-  [4, 2], // [x, y]
-  
+  [4, 2], // [x, y] 
 ];
 
 // Load the predefined map into tilemap variable
@@ -170,68 +170,131 @@ function drawCar() {
   ctx.restore();
 }
 
+// Flag to track if the car was on the start line in the previous frame
+let currentLapTime = 0;
+// Initialize lap state
+let lapState = "ready"; // Possible states: "ready", "started"
+
+// Flag to track if the car was on the start line in the previous frame
+let wasOnStartLine = false;
+
+// Ensure this line is added before the updateCar function
+const currentLapTimeDiv = document.getElementById('currentLapTimeDiv');
+
 // Function to update the car's position and handle movement logic
 function updateCar() {
-  const acceleration = 0.2;
-  const maxSpeed = 5;
-  const friction = 0.05;
-  const rotationSpeed = 0.04;
+    const acceleration = 0.01;
+    const maxSpeed = 1.5;
+    const friction = 0.05;
+    const rotationSpeed = 0.02;
 
-  // Handle acceleration
-  if (keys.ArrowUp) {
-    carSpeed += acceleration;
-  }
-  if (keys.ArrowDown) {
-    carSpeed -= acceleration;
-  }
-
-  // Handle rotation
-  if (keys.ArrowLeft) {
-    carAngle -= rotationSpeed;
-  }
-  if (keys.ArrowRight) {
-    carAngle += rotationSpeed;
-  }
-
-  // Apply friction when not accelerating
-  if (!keys.ArrowUp && !keys.ArrowDown) {
-    if (carSpeed > 0) {
-      carSpeed -= friction;
-      if (carSpeed < 0) carSpeed = 0;
-    } else if (carSpeed < 0) {
-      carSpeed += friction;
-      if (carSpeed > 0) carSpeed = 0;
+    // Handle acceleration
+    if (keys.ArrowUp) {
+        carSpeed += acceleration;
     }
-  }
+    if (keys.ArrowDown) {
+        carSpeed -= acceleration;
+    }
 
-  // Limit the car's speed
-  carSpeed = Math.max(Math.min(carSpeed, maxSpeed), -maxSpeed / 2);
+    // Handle rotation
+    if (keys.ArrowLeft) {
+        carAngle -= rotationSpeed;
+    }
+    if (keys.ArrowRight) {
+        carAngle += rotationSpeed;
+    }
 
-  // Calculate proposed new position
-  const newCarX = carX + Math.sin(carAngle) * carSpeed;
-  const newCarY = carY - Math.cos(carAngle) * carSpeed;
+    // Apply friction when not accelerating
+    if (!keys.ArrowUp && !keys.ArrowDown) {
+        if (carSpeed > 0) {
+            carSpeed -= friction;
+            if (carSpeed < 0) carSpeed = 0;
+        } else if (carSpeed < 0) {
+            carSpeed += friction;
+            if (carSpeed > 0) carSpeed = 0;
+        }
+    }
 
-  // Determine the tile the car would be on
-  const proposedTileX = Math.floor(newCarX / tileSize);
-  const proposedTileY = Math.floor(newCarY / tileSize);
+    // Limit the car's speed
+    carSpeed = Math.max(Math.min(carSpeed, maxSpeed), -maxSpeed / 2);
 
-  // Check for collision with walls or grass
-  if (tilemap[proposedTileY]?.[proposedTileX] === 1 || tilemap[proposedTileY]?.[proposedTileX] === 3) {
-    // No collision, update the car's position
-    carX = newCarX;
-    carY = newCarY;
+    // Calculate proposed new position
+    const newCarX = carX + Math.sin(carAngle) * carSpeed;
+    const newCarY = carY - Math.cos(carAngle) * carSpeed;
 
-    // Check for crossing the start/finish line
-    checkLap(proposedTileX, proposedTileY);
-  } else {
-    // Collision detected, stop the car
-    carSpeed = 0;
-  }
+    // Determine the tile the car would be on
+    const proposedTileX = Math.floor(newCarX / tileSize);
+    const proposedTileY = Math.floor(newCarY / tileSize);
 
-  // Update camera position to center on the car
-  updateCamera();
+    // Get the tile type at the proposed position
+    const tileType = tilemap[proposedTileY]?.[proposedTileX];
+
+    // Determine if the car is on the start/finish line
+    const isOnStartLine = startFinishLine.some(
+        ([lineX, lineY]) => lineX === proposedTileX && lineY === proposedTileY
+    );
+
+    // Detect transition into the start/finish line
+    if (isOnStartLine && !wasOnStartLine) {
+        if (lapState === "ready") {
+            // Start the lap
+            startTime = Date.now();
+            lapState = "started";
+            showMessage("Lap Started!");
+            console.log("Lap Started!");
+        } else if (lapState === "started") {
+            // Finish the lap
+            const finishTime = Date.now();
+            lapTime = (finishTime - startTime) / 1000; // Time in seconds
+            showMessage(`Lap Finished! Time: ${lapTime.toFixed(2)}s`);
+            console.log(`Lap Finished! Time: ${lapTime.toFixed(2)}s`);
+
+            // Reset for the next lap
+            lapState = "ready";
+        }
+    }
+
+    // Update wasOnStartLine for the next frame
+    wasOnStartLine = isOnStartLine;
+
+    // Handle movement based on tile type
+    if (tileType === 1 || tileType === 3) {
+        // Road or Start/Finish Line: Normal movement
+        carX = newCarX;
+        carY = newCarY;
+    } else if (tileType === 0) {
+        // Grass: Allow movement but slow down the car
+        carX = newCarX;
+        carY = newCarY;
+
+        // Apply a speed reduction factor (e.g., 50% speed)
+        carSpeed *= 0.5;
+
+        // Optionally, apply additional friction for smoother slowdown
+        carSpeed -= friction;
+        carSpeed = Math.max(Math.min(carSpeed, maxSpeed), -maxSpeed / 2);
+    } else if (tileType === 2) {
+        // Wall: Prevent movement by stopping the car
+        carSpeed = 0;
+    } else {
+        // Unknown tile type: Treat as impassable for safety
+        carSpeed = 0;
+    }
+// Update the current lap time display
+if (lapState === "started" && startTime != null) {
+    const currentTime = Date.now();
+    const elapsed = (currentTime - startTime) / 1000;
+    currentLapTimeDiv.textContent = `Current Lap Time: ${elapsed.toFixed(2)}s`;
+} else {
+    currentLapTimeDiv.textContent = `Current Lap Time: 0.00s`;
+}
+    // Update camera position to center on the car
+    updateCamera();
+    currentLapTimeDiv.innerText = `Lap Time: ${currentLapTime}`;
 }
 
+
+  
 // Function to update the camera's position based on the car's position
 function updateCamera() {
   camera.x = Math.max(0, Math.min(carX - camera.width / 2, mapWidth * tileSize - camera.width));
@@ -251,13 +314,17 @@ function checkLap(x, y) {
       lapTime = null; // Reset previous lap time
       showMessage('Lap Started!');
       console.log('Lap Started!');
-    } else if (lapTime === null) {
-      // Finish the lap
-      const finishTime = Date.now();
-      lapTime = (finishTime - startTime) / 1000; // Time in seconds
-      showMessage(`Lap Finished! Time: ${lapTime.toFixed(2)}s`);
-      console.log(`Lap Finished! Time: ${lapTime.toFixed(2)}s`);
-    }
+    // Inside the lap finishing logic
+} else if (lapTime === null) {
+    // Finish the lap
+    const finishTime = Date.now();
+    lapTime = (finishTime - startTime) / 1000; // Time in seconds
+    showMessage(`Lap Finished! Time: ${lapTime.toFixed(2)}s`);
+    console.log(`Lap Finished! Time: ${lapTime.toFixed(2)}s`);
+  
+    // Reset for the next lap
+    hasCrossedStart = false;
+  }
   }
 }
 
