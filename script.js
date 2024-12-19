@@ -40,6 +40,35 @@ const startFinishLine = [
 // Load the predefined map into tilemap variable
 let tilemap = predefinedMap;
 
+// Define additional track maps
+const predefinedMap2 = [
+  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ,
+  [ 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0 ] ,
+  [ 0, 2, 1, 1, 1, 1, 1, 1, 1, 2, 0 ] ,
+  [ 0, 2, 1, 1, 0, 0, 0, 0, 1, 2, 0 ] ,
+  [ 0, 2, 1, 0, 2, 1, 1, 1, 1, 2, 0 ] ,
+  [ 0, 2, 1, 2, 2, 1, 0, 0, 0, 2, 0 ] ,
+  [ 0, 2, 1, 2, 2, 1, 1, 1, 1, 2, 0 ] ,
+  [ 0, 2, 1, 1, 0, 0, 0, 1, 1, 2, 0 ] ,
+  [ 0, 2, 1, 1, 1, 1, 1, 1, 1, 2, 0 ] ,
+  [ 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0 ] ,
+  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] , 
+];
+
+const predefinedMap3 = [
+  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ,
+  [ 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0 ] ,
+  [ 0, 2, 1, 1, 1, 1, 1, 1, 1, 2, 0 ] ,
+  [ 0, 2, 1, 1, 0, 0, 0, 0, 1, 2, 0 ] ,
+  [ 0, 2, 1, 0, 2, 1, 1, 1, 1, 2, 0 ] ,
+  [ 0, 2, 1, 2, 2, 1, 0, 0, 0, 2, 0 ] ,
+  [ 0, 2, 1, 2, 2, 1, 1, 1, 1, 2, 0 ] ,
+  [ 0, 2, 1, 1, 0, 0, 1, 1, 1, 2, 0 ] ,
+  [ 0, 2, 1, 1, 1, 1, 1, 1, 1, 2, 0 ] ,
+  [ 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0 ] ,
+  [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] , 
+];
+
 // Car properties
 const carWidth = 40;  // Width of the car rectangle
 const carHeight = 60; // Height of the car rectangle
@@ -181,8 +210,34 @@ let wasOnStartLine = false;
 // Ensure this line is added before the updateCar function
 const currentLapTimeDiv = document.getElementById('currentLapTimeDiv');
 
+// Countdown timer variables
+let countdown = 3;
+let countdownInterval = null;
+let gameStarted = false;
+
+// Function to start the countdown
+function startCountdown() {
+    countdown = 3;
+    gameStarted = false;
+    countdownInterval = setInterval(() => {
+        if (countdown > 0) {
+            showMessage(`Starting in ${countdown}...`);
+            countdown--;
+        } else {
+            clearInterval(countdownInterval);
+            gameStarted = true;
+            showMessage("Go!");
+        }
+    }, 1000);
+}
+
+// Call startCountdown to initiate the countdown at the beginning
+startCountdown();
+
 // Function to update the car's position and handle movement logic
 function updateCar() {
+    if (!gameStarted) return; // Prevent car movement until the game starts
+
     const acceleration = 0.01;
     const maxSpeed = 1.5;
     const friction = 0.05;
@@ -248,6 +303,9 @@ function updateCar() {
             lapTime = (finishTime - startTime) / 1000; // Time in seconds
             showMessage(`Lap Finished! Time: ${lapTime.toFixed(2)}s`);
             console.log(`Lap Finished! Time: ${lapTime.toFixed(2)}s`);
+
+            // Show result screen and leaderboard
+            showResultScreen(lapTime);
 
             // Reset for the next lap
             lapState = "ready";
@@ -376,6 +434,110 @@ function drawReferences() {
   ctx.fillStyle = 'white';
   ctx.fill();
   ctx.restore();
+}
+
+// Function to show the result screen and leaderboard
+function showResultScreen(lapTime) {
+    const resultScreen = document.createElement('div');
+    resultScreen.id = 'resultScreen';
+    resultScreen.style.position = 'absolute';
+    resultScreen.style.top = '50%';
+    resultScreen.style.left = '50%';
+    resultScreen.style.transform = 'translate(-50%, -50%)';
+    resultScreen.style.background = 'rgba(0, 0, 0, 0.8)';
+    resultScreen.style.color = 'white';
+    resultScreen.style.padding = '20px';
+    resultScreen.style.borderRadius = '10px';
+    resultScreen.style.textAlign = 'center';
+    resultScreen.style.zIndex = '1000';
+
+    resultScreen.innerHTML = `
+        <h2>Lap Finished!</h2>
+        <p>Time: ${lapTime.toFixed(2)}s</p>
+        <button id="replayButton">Replay</button>
+        <button id="selectTrackButton">Select Track</button>
+    `;
+
+    document.body.appendChild(resultScreen);
+
+    document.getElementById('replayButton').addEventListener('click', () => {
+        document.body.removeChild(resultScreen);
+        startCountdown();
+    });
+
+    document.getElementById('selectTrackButton').addEventListener('click', () => {
+        document.body.removeChild(resultScreen);
+        showTrackSelection();
+    });
+}
+
+// Function to show track selection screen
+function showTrackSelection() {
+    const trackSelectionScreen = document.createElement('div');
+    trackSelectionScreen.id = 'trackSelectionScreen';
+    trackSelectionScreen.style.position = 'absolute';
+    trackSelectionScreen.style.top = '50%';
+    trackSelectionScreen.style.left = '50%';
+    trackSelectionScreen.style.transform = 'translate(-50%, -50%)';
+    trackSelectionScreen.style.background = 'rgba(0, 0, 0, 0.8)';
+    trackSelectionScreen.style.color = 'white';
+    trackSelectionScreen.style.padding = '20px';
+    trackSelectionScreen.style.borderRadius = '10px';
+    trackSelectionScreen.style.textAlign = 'center';
+    trackSelectionScreen.style.zIndex = '1000';
+
+    trackSelectionScreen.innerHTML = `
+        <h2>Select Track</h2>
+        <button id="track1Button">Track 1</button>
+        <button id="track2Button">Track 2</button>
+        <button id="track3Button">Track 3</button>
+    `;
+
+    document.body.appendChild(trackSelectionScreen);
+
+    document.getElementById('track1Button').addEventListener('click', () => {
+        document.body.removeChild(trackSelectionScreen);
+        loadTrack(1);
+        startCountdown();
+    });
+
+    document.getElementById('track2Button').addEventListener('click', () => {
+        document.body.removeChild(trackSelectionScreen);
+        loadTrack(2);
+        startCountdown();
+    });
+
+    document.getElementById('track3Button').addEventListener('click', () => {
+        document.body.removeChild(trackSelectionScreen);
+        loadTrack(3);
+        startCountdown();
+    });
+}
+
+// Function to load a track based on the selected track number
+function loadTrack(trackNumber) {
+    switch (trackNumber) {
+        case 1:
+            tilemap = predefinedMap; // Load predefined map for track 1
+            break;
+        case 2:
+            tilemap = predefinedMap2; // Load predefined map for track 2
+            break;
+        case 3:
+            tilemap = predefinedMap3; // Load predefined map for track 3
+            break;
+        default:
+            tilemap = predefinedMap; // Default to track 1
+    }
+    // Reset car position and state
+    carX = 5 * tileSize + tileSize / 2;
+    carY = 2 * tileSize + tileSize / 2;
+    carSpeed = 0;
+    carAngle = -1.5708;
+    lapState = "ready";
+    wasOnStartLine = false;
+    currentLapTime = 0;
+    startTime = null;
 }
 
 // The main game loop
