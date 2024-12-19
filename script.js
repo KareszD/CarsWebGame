@@ -251,7 +251,12 @@ function updateCar() {
 
             // Reset for the next lap
             lapState = "ready";
+            startTime = null; // Clear startTime to indicate the lap has finished
         }
+    } else if (!isOnStartLine && lapState === "ready" && startTime === null) {
+        // Prepare for the next lap when the car leaves the start/finish line
+        lapState = "ready";
+        startTime = Date.now(); // Set startTime for the next lap
     }
 
     // Update wasOnStartLine for the next frame
@@ -280,19 +285,19 @@ function updateCar() {
         // Unknown tile type: Treat as impassable for safety
         carSpeed = 0;
     }
-// Update the current lap time display
-if (lapState === "started" && startTime != null) {
-    const currentTime = Date.now();
-    const elapsed = (currentTime - startTime) / 1000;
-    currentLapTimeDiv.textContent = `Current Lap Time: ${elapsed.toFixed(2)}s`;
-} else {
-    currentLapTimeDiv.textContent = `Current Lap Time: 0.00s`;
-}
+
+    // Update the current lap time display
+    if (lapState === "started" && startTime != null) {
+        const currentTime = Date.now();
+        currentLapTime = (currentTime - startTime) / 1000;
+        currentLapTimeDiv.textContent = `Current Lap Time: ${currentLapTime.toFixed(2)}s`;
+    } else {
+        currentLapTimeDiv.textContent = `Current Lap Time: 0.00s`;
+    }
+
     // Update camera position to center on the car
     updateCamera();
-    currentLapTimeDiv.innerText = `Lap Time: ${currentLapTime}`;
 }
-
 
   
 // Function to update the camera's position based on the car's position
